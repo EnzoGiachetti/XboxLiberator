@@ -1,7 +1,9 @@
-name: Build & Release XboxLiberator
+name: Build & Publish Releases (Windows, Linux, macOS)
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -15,18 +17,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 1. Windows: Executável instalador (.exe via NSIS) e versão standalone
+          # 1. Windows: Instalador .exe (NSIS) + Portátil .zip
           - platform: 'windows-latest'
             args: '--bundles nsis'
-          # 2. Linux: Pacotes .deb, .rpm (Fedora/RHEL/openSUSE) e .AppImage universal
+            os_name: 'windows'
+          # 2. Linux: .rpm (Fedora), .deb (Ubuntu/Mint) e .AppImage (Portátil universal)
           - platform: 'ubuntu-22.04'
             args: '--bundles deb,rpm,appimage'
-          # 3. macOS: Imagem de disco (.dmg contendo o .app) para Apple Silicon (ARM64)
+            os_name: 'linux'
+          # 3. macOS: .dmg para Apple Silicon (M1/M2/M3)
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin --bundles dmg'
-          # 4. macOS: Imagem de disco (.dmg contendo o .app) para Intel (x86_64)
+            os_name: 'macos-arm64'
+          # 4. macOS: .dmg para Intel
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin --bundles dmg'
+            os_name: 'macos-x64'
 
     runs-on: ${{ matrix.platform }}
 
@@ -60,15 +66,39 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: Compilar e Empacotar XboxLiberator via Tauri Action
+      - name: Compilar e Publicar Instaladores na Aba Releases
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'XboxLiberator v__VERSION__'
-          releaseBody: 'Pacotes oficiais compilados para Windows (.exe NSIS), Linux (.rpm, .deb, .AppImage) e macOS (.dmg Apple Silicon & Intel).'
-          releaseDraft: true
+          releaseName: 'XboxLiberator v__VERSION__ (Pronto para Uso)'
+          releaseBody: |
+            ## 🎮 Download Direto — XboxLiberator v__VERSION__
+            Não é necessário instalar Rust ou compilar código! Escolha abaixo o instalador para o seu sistema operacional:
+            - **🪟 Windows:** Baixe o arquivo `_x64-setup.exe` (ou o `.zip` portátil).
+            - **🐧 Linux (Fedora / RHEL / openSUSE):** Baixe o arquivo `.rpm`.
+            - **🐧 Linux (Ubuntu / Debian / Mint):** Baixe o arquivo `.deb`.
+            - **🐧 Linux (Portátil Universal):** Baixe o arquivo `.AppImage`.
+            - **🍎 macOS:** Baixe o arquivo `.dmg` (`aarch64` para Apple Silicon M1/M2/M3 ou `x64` para Intel).
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 
+      - name: Empacotar Versão Portátil Windows (.zip com payload incluso)
+        if: matrix.os_name == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-portable/XboxLiberator-Windows-Portable
+          Copy-Item "src-tauri/target/release/xboxliberator.exe" "dist-portable/XboxLiberator-Windows-Portable/XboxLiberator.exe"
+          Copy-Item -Recurse "payload" "dist-portable/XboxLiberator-Windows-Portable/payload"
+          Compress-Archive -Path "dist-portable/XboxLiberator-Windows-Portable/*" -DestinationPath "XboxLiberator-Windows-Portable.zip"
+
+      - name: Anexar .zip Portátil do Windows na Release
+        if: matrix.os_name == 'windows'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0.0
+          files: XboxLiberator-Windows-Portable.zip

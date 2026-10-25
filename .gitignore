@@ -1,9 +1,9 @@
-# Arquivos de compilação do Rust / Tauri (MUITO PESADOS)
+# Arquivos compilados localmente pelo Rust / Cargo
 src-tauri/target/
-**/target/
+target/
 
-# Dependências e caches
-node_modules/
-dist/
+# Arquivos temporários do sistema operacional
 .DS_Store
-*.log
+Thumbs.db
+*~
+*.swp

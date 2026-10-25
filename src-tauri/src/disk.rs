@@ -60,30 +60,34 @@ pub struct RemovableDrive {
 }
 
 /// Localiza o diretório `./payload` buscando a partir do diretório de trabalho atual,
-/// do diretório pai (quando executado dentro de `src-tauri`) ou ao lado do executável.
+/// do diretório pai, ao lado do executável ou nos diretórios de recursos empacotados pelo instalador
+/// (Windows NSIS, Linux `.rpm`/`.deb`/`.AppImage` e macOS `.app`).
 pub fn resolve_payload_dir() -> PathBuf {
-    let candidates = [
+    let mut candidates = vec![
         PathBuf::from("./payload"),
         PathBuf::from("../payload"),
     ];
 
-    for candidate in &candidates {
-        if candidate.exists() && candidate.is_dir() {
-            return candidate.canonicalize().unwrap_or_else(|_| candidate.clone());
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            // 1. Portátil / Windows NSIS (ao lado do executável ou em _up_/payload)
+            candidates.push(exe_dir.join("payload"));
+            candidates.push(exe_dir.join("_up_/payload"));
+            candidates.push(exe_dir.join("resources/payload"));
+            // 2. macOS .app bundle (Contents/MacOS/../Resources/...)
+            candidates.push(exe_dir.join("../Resources/payload"));
+            candidates.push(exe_dir.join("../Resources/_up_/payload"));
+            // 3. Linux .deb / .rpm / .AppImage (/usr/bin/../lib/XboxLiberator/...)
+            candidates.push(exe_dir.join("../lib/XboxLiberator/payload"));
+            candidates.push(exe_dir.join("../lib/XboxLiberator/_up_/payload"));
+            candidates.push(exe_dir.join("../lib/xboxliberator/payload"));
+            candidates.push(exe_dir.join("../lib/xboxliberator/_up_/payload"));
         }
     }
 
-    if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
-            let beside_exe = exe_dir.join("payload");
-            if beside_exe.exists() && beside_exe.is_dir() {
-                return beside_exe;
-            }
-            // Suporte a recursos empacotados pelo Tauri (Linux /usr/lib/..., macOS Resources)
-            let up_one = exe_dir.join("../Resources/payload");
-            if up_one.exists() && up_one.is_dir() {
-                return up_one;
-            }
+    for candidate in &candidates {
+        if candidate.exists() && candidate.is_dir() {
+            return candidate.canonicalize().unwrap_or_else(|_| candidate.clone());
         }
     }
 

@@ -1,22 +1,47 @@
-# XboxLiberator
+# 🎮 XboxLiberator
 
-**XboxLiberator** é uma aplicação desktop multiplataforma e open source inspirada na simplicidade e segurança do *BalenaEtcher*, projetada especificamente para preparar unidades USB (pendrives) para **Xbox 360** de forma automatizada.
+**Prepare o seu pendrive de Xbox 360 em 1 clique** — Formatação automática em FAT32, cópia cirúrgica 1:1 do pacote de destrava (`./payload`), sincronização de cache e ejeção segura.
 
-O utilitário realiza em um único fluxo:
-1. **Validação estrita** dos 7 itens obrigatórios na pasta local `./payload` (preservando maiúsculas e minúsculas).
-2. **Formatação em FAT32** da unidade USB selecionada (`0% -> 20%`).
-3. **Clonagem Direta 1:1 para a raiz** da partição USB sem criar pasta intermediária `payload/` (`20% -> 85%`).
-4. **Flush e Sincronização de Buffers (`sync`)** para evitar corrupção por cache pendente (`85% -> 95%`).
-5. **Ejeção Automática Segura** e desenergização da porta USB (`95% -> 100%`).
+> **✨ 100% Pronto para Uso:** Você **não** precisa saber programar nem compilar nada! Basta clicar no botão do seu sistema operacional abaixo, baixar e abrir.
 
 ---
 
-## Estrutura Obrigatória do Payload (`./payload`)
+## ⬇️ Download Direto (Instaladores Prontos)
 
-Na raiz do projeto deve existir o diretório `./payload` contendo exatamente os 7 itens abaixo (com *casing* idêntico):
+Escolha o seu sistema operacional abaixo para baixar a versão mais recente diretamente:
+
+| Sistema Operacional | Formato | Link Direto de Download | Como Usar |
+| :--- | :--- | :--- | :--- |
+| 🪟 **Windows 10 / 11** | Instalador (`.exe`) | [**📥 Baixar Instalador Windows (.exe)**](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest) | Dê dois cliques no `-setup.exe` e abra o **XboxLiberator**. |
+| 🪟 **Windows (Portátil)** | Arquivo `.zip` | [**📥 Baixar Windows Portátil (.zip)**](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest) | Extraia o `.zip` e dê dois cliques em `XboxLiberator.exe`. |
+| 🐧 **Fedora / RHEL / openSUSE** | Pacote `.rpm` | [**📥 Baixar para Fedora (.rpm)**](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest) | Dê dois cliques no `.rpm` ou rode `sudo dnf install ./XboxLiberator*.rpm`. |
+| 🐧 **Ubuntu / Debian / Mint** | Pacote `.deb` | [**📥 Baixar para Ubuntu/Mint (.deb)**](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest) | Dê dois cliques no `.deb` ou rode `sudo apt install ./XboxLiberator*.deb`. |
+| 🐧 **Qualquer Linux (Portátil)** | `.AppImage` | [**📥 Baixar Linux Universal (.AppImage)**](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest) | Marque como executável (`chmod +x *.AppImage`) e dê dois cliques. |
+| 🍎 **macOS (Apple Silicon & Intel)** | Imagem `.dmg` | [**📥 Baixar para macOS (.dmg)**](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest) | Abra o `.dmg` e arraste o **XboxLiberator** para `Aplicativos`. |
+
+👉 **[Clique aqui para ver todos os arquivos na página oficial de Releases](https://github.com/EnzoGiachetti/XboxLiberator/releases/latest)**
+
+---
+
+## 🚀 Como Usar o Programa (3 Passos Simples)
+
+1. **Conecte o seu Pendrive USB** no computador.
+2. **Abra o XboxLiberator**:
+   - No **Card 1 (Pacote de Destrava)**, o programa já traz embutido e validado todo o pacote necessário (`Aurora`, `BadUpdatePayload`, `Content`, `Simple 360 NAND Flasher`, `JRPC2.xex`, `launch.ini`, `Xbdm.xex`).
+   - No **Card 2 (Unidade de Destino)**, selecione o seu pendrive na lista (discos internos do seu computador ficam ocultos automaticamente para sua total segurança).
+3. **Clique em "Montar Pendrive"** no **Card 3**:
+   - Confirme o aviso de formatação.
+   - Aguarde a barra chegar em **100%** (o programa formata em FAT32, copia os arquivos direto para a raiz do pendrive e ejeta com segurança).
+   - **Pronto!** É só remover o pendrive e conectar no Xbox 360.
+
+---
+
+## 📦 Estrutura Interna do Payload Incluído
+
+O pacote embutido em `./payload` é copiado na proporção **1:1 diretamente para a raiz do pendrive** (sem criar pastas intermediárias):
 
 ```text
-payload/
+Raiz do Pendrive (USB)/
 ├── Aurora/
 ├── BadUpdatePayload/
 ├── Content/
@@ -26,71 +51,46 @@ payload/
 └── Xbdm.xex
 ```
 
-Durante a gravação, os 7 itens são copiados diretamente para a raiz da unidade USB (ex.: `E:\launch.ini` no Windows ou `/run/media/usuario/XBOX360/launch.ini` no Linux).
-
 ---
 
-## Instalação dos Pacotes Pré-Compilados
+## 🛠️ Área para Desenvolvedores (Compilação Manual Opcional)
 
-### Linux — Fedora, RHEL e openSUSE (`.rpm`)
-```bash
-sudo dnf install ./xboxliberator.rpm
-cargo run --manifest-path src-tauri/Cargo.toml
-```
-
-### Linux — Ubuntu, Debian e Linux Mint (`.deb`)
-```bash
-sudo apt install ./xboxliberator.deb
-```
-
-### Linux — Portátil Universal (`.AppImage`)
-```bash
-chmod +x ./xboxliberator.AppImage
-./xboxliberator.AppImage
-```
-
-### Windows (`.exe` NSIS ou Standalone)
-Execute o instalador gerado `XboxLiberator_1.0.0_x64-setup.exe` ou o executável portátil `xboxliberator.exe`.
-
-### macOS (`.dmg` Apple Silicon & Intel)
-Abra o arquivo `XboxLiberator_1.0.0_aarch64.dmg` (ou `x64.dmg`) e arraste o **XboxLiberator.app** para a pasta `Applications`.
-
----
-
-## Como Compilar Localmente
+<details>
+<summary><strong>Clique aqui se você for desenvolvedor e quiser compilar o código-fonte manualmente</strong></summary>
 
 ### 1. Pré-requisitos
 - **Rust** (`rustup`, `cargo`, `rustc` estável)
 - **Tauri CLI v2**:
   ```bash
-  cargo install tauri-cli --version "^2.0.0"
+  cargo install tauri-cli --version "^2.0.0" --locked
   ```
 
-#### Dependências de sistema no Fedora / RHEL:
+#### Dependências no Fedora / RHEL:
 ```bash
-sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file libappindicator-gtk3-devel librsvg2-devel dosfstools rpm-build
+sudo dnf install -y webkit2gtk4.1-devel gtk3-devel glib2-devel openssl-devel curl wget file libappindicator-gtk3-devel librsvg2-devel dosfstools rpm-build
 ```
 
-#### Dependências de sistema no Ubuntu / Debian:
+#### Dependências no Ubuntu / Debian:
 ```bash
 sudo apt update
-sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev dosfstools rpm
+sudo apt install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev dosfstools rpm
 ```
 
 ### 2. Executar em Modo de Desenvolvimento
 ```bash
-cargo tauri dev
+cargo run --manifest-path src-tauri/Cargo.toml
 ```
 
-### 3. Gerar Pacotes de Produção (`.rpm`, `.deb`, `.AppImage`, `.exe`, `.dmg`)
+### 3. Gerar Instaladores Localmente
 ```bash
 cargo tauri build
 ```
-Os instaladores finais serão gerados em `src-tauri/target/release/bundle/`.
+Os pacotes serão gerados em `src-tauri/target/release/bundle/`.
+</details>
 
 ---
 
-## Aviso Legal (Disclaimer Educacional)
+## ⚖️ Aviso Legal (Disclaimer Educacional)
 
 > **AVISO IMPORTANTE:**  
 > O **XboxLiberator** é uma ferramenta open source desenvolvida exclusivamente para **fins educacionais, preservação de hardware, interoperabilidade e execução de software homebrew legítimo** em consoles pertencentes ao próprio usuário.  
