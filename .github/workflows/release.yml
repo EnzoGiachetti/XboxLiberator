@@ -1,0 +1,74 @@
+name: Build & Release XboxLiberator
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 1. Windows: Executável instalador (.exe via NSIS) e versão standalone
+          - platform: 'windows-latest'
+            args: '--bundles nsis'
+          # 2. Linux: Pacotes .deb, .rpm (Fedora/RHEL/openSUSE) e .AppImage universal
+          - platform: 'ubuntu-22.04'
+            args: '--bundles deb,rpm,appimage'
+          # 3. macOS: Imagem de disco (.dmg contendo o .app) para Apple Silicon (ARM64)
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin --bundles dmg'
+          # 4. macOS: Imagem de disco (.dmg contendo o .app) para Intel (x86_64)
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin --bundles dmg'
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Dependências de Sistema no Linux (Ubuntu -> .deb, .rpm, .AppImage)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            dosfstools \
+            rpm
+
+      - name: Configurar Toolchain Rust Estável
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache de Dependências Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Compilar e Empacotar XboxLiberator via Tauri Action
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'XboxLiberator v__VERSION__'
+          releaseBody: 'Pacotes oficiais compilados para Windows (.exe NSIS), Linux (.rpm, .deb, .AppImage) e macOS (.dmg Apple Silicon & Intel).'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+

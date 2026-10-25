@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XboxLiberator — Xbox 360 USB Flasher</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Cabeçalho superior estilo BalenaEtcher com identidade visual Xbox -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="xbox-sphere" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M7.5 6.5C9.5 8.5 14.5 8.5 16.5 6.5" />
+            <path d="M6.5 17.5C9 13 15 13 17.5 17.5" />
+            <path d="M7.5 6.5C10 11 9.5 14 6.5 17.5" />
+            <path d="M16.5 6.5C14 11 14.5 14 17.5 17.5" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Xbox<span class="accent">Liberator</span></h1>
+          <p class="brand-subtitle">Preparador Automatizado de Mídia USB para Xbox 360 (FAT32 • 1:1 Payload • Safe Eject)</p>
+        </div>
+      </div>
+      <div class="security-pill" title="Apenas dispositivos USB removíveis são permitidos. Discos internos e partições do sistema estão ocultos e bloqueados.">
+        <span class="dot"></span>
+        <span>Trava USB Safe-Guard Ativa</span>
+      </div>
+    </header>
+
+    <!-- Layout principal em 3 colunas (Estilo BalenaEtcher) -->
+    <main class="steps-grid">
+      <!-- CARD 1: ORIGEM (SOURCE) -->
+      <section class="step-card" id="card-source">
+        <div class="step-badge">1</div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+        </div>
+        <h2 class="card-title">Pacote de Destrava</h2>
+        <p class="card-subtitle">Origem detectada em <code>./payload</code></p>
+
+        <div class="payload-status-box" id="payload-status-box">
+          <div class="status-indicator" id="payload-indicator">Verificando payload...</div>
+          <div class="payload-meta">
+            <span>Tamanho Total:</span>
+            <strong id="payload-size">-- MB</strong>
+          </div>
+        </div>
+
+        <ul class="payload-checklist" id="payload-checklist" aria-label="Itens obrigatórios do payload">
+          <li data-item="Aurora"><code>Aurora/</code></li>
+          <li data-item="BadUpdatePayload"><code>BadUpdatePayload/</code></li>
+          <li data-item="Content"><code>Content/</code></li>
+          <li data-item="Simple 360 NAND Flasher"><code>Simple 360 NAND Flasher/</code></li>
+          <li data-item="JRPC2.xex"><code>JRPC2.xex</code></li>
+          <li data-item="launch.ini"><code>launch.ini</code></li>
+          <li data-item="Xbdm.xex"><code>Xbdm.xex</code></li>
+        </ul>
+
+        <button type="button" class="btn btn-secondary" id="btn-recheck-payload">
+          Revalidar Payload Local
+        </button>
+      </section>
+
+      <!-- CONECTOR VISUAL 1 -> 2 -->
+      <div class="step-connector" aria-hidden="true">
+        <span class="connector-line"></span>
+      </div>
+
+      <!-- CARD 2: DESTINO (TARGET DRIVE) -->
+      <section class="step-card" id="card-target">
+        <div class="step-badge">2</div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="7" y="2" width="10" height="6" rx="1" />
+            <path d="M5 8h14v9a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V8z" />
+            <line x1="10" y1="5" x2="10" y2="5.01" />
+            <line x1="14" y1="5" x2="14" y2="5.01" />
+          </svg>
+        </div>
+        <h2 class="card-title">Unidade de Destino</h2>
+        <p class="card-subtitle">Selecione o Pendrive USB (FAT32)</p>
+
+        <div class="drive-selector-group">
+          <label for="drive-select" class="sr-only">Selecionar unidade USB removível</label>
+          <select id="drive-select" class="drive-select">
+            <option value="">Buscando mídias USB removíveis...</option>
+          </select>
+
+          <div class="drive-details" id="drive-details">
+            Nenhum pendrive selecionado. Discos internos do sistema estão ocultos por segurança.
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary" id="btn-refresh-drives">
+          Atualizar Lista USB
+        </button>
+      </section>
+
+      <!-- CONECTOR VISUAL 2 -> 3 -->
+      <div class="step-connector" aria-hidden="true">
+        <span class="connector-line"></span>
+      </div>
+
+      <!-- CARD 3: AÇÃO (MONTAR / FLASH) -->
+      <section class="step-card" id="card-action">
+        <div class="step-badge">3</div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+        </div>
+        <h2 class="card-title">Gravação Automatizada</h2>
+        <p class="card-subtitle">Formatar FAT32 + Copiar 1:1 + Sync</p>
+
+        <button type="button" class="btn btn-primary" id="btn-flash" disabled>
+          Montar Pendrive
+        </button>
+
+        <label class="eject-checkbox-label" for="chk-auto-eject">
+          <input type="checkbox" id="chk-auto-eject" checked />
+          <span>Ejetar unidade em segurança ao finalizar</span>
+        </label>
+
+        <!-- Painel de progresso em tempo real (0% a 100%) -->
+        <div class="progress-panel" id="progress-panel">
+          <div class="progress-header">
+            <span id="progress-stage-label">Aguardando início</span>
+            <strong id="progress-percentage">0%</strong>
+          </div>
+          <div class="progress-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+          <p class="progress-status-text" id="progress-status-text">
+            Selecione uma unidade USB removível para habilitar a gravação.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Rodapé informativo -->
+    <footer class="app-footer">
+      <span>Clonagem direta 1:1 para a raiz da partição USB (sem pasta intermediária <code>payload/</code>)</span>
+      <span>XboxLiberator v1.0.0 • Open Source</span>
+    </footer>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO ANTES DE GRAVAR -->
+  <div class="modal-backdrop hidden" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-warning-header">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#f59e0b" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <h3 id="modal-title">Confirmação de Formatação</h3>
+      </div>
+      <p class="modal-message">
+        ATENÇÃO: Todos os dados da unidade selecionada serão apagados permanentemente durante a formatação em FAT32. Deseja prosseguir?
+      </p>
+      <div class="modal-target-summary" id="modal-target-summary"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btn-modal-cancel">Cancelar</button>
+        <button type="button" class="btn btn-danger-confirm" id="btn-modal-confirm">Sim, Formatar e Montar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
+

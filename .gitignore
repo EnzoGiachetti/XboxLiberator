@@ -1,0 +1,9 @@
+# Arquivos de compilação do Rust / Tauri (MUITO PESADOS)
+src-tauri/target/
+**/target/
+
+# Dependências e caches
+node_modules/
+dist/
+.DS_Store
+*.log
